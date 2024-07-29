@@ -1,0 +1,1 @@
+SELECT "ajay" as name , 26 as age , "M" as gender

@@ -1,0 +1,24 @@
+default:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: postgres
+      user: airflow
+      password: airflow
+      port: 5432
+      dbname: airflow
+      schema: airflow
+
+
+# default:
+#   target: dev
+#   outputs:
+#     dev:
+#       type: bigquery
+#       method: service-account
+#       project: my-etl-project-27276
+#       dataset: dbt_najay
+#       keyfile: C:/Users/ajayn/Downloads/my-etl-project-27276-cb9a0c34d2d5.json
+#       threads: 1
+#       timeout_seconds: 300

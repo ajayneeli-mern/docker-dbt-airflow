@@ -1,0 +1,73 @@
+version: '3.7'
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  airflow:
+    image: apache/airflow:2.5.1
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__WEBSERVER__ENABLE_PROXY_FIX: 'True'
+    volumes:
+      - /c/Users/ajayn/Documents/docker-dbt-airflow/dags:/opt/airflow/dags
+      - /c/Users/ajayn/Documents/docker-dbt-airflow/logs:/opt/airflow/logs
+      - /c/Users/ajayn/Documents/docker-dbt-airflow/plugins:/opt/airflow/plugins
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    command: >
+      bash -c "
+      airflow db upgrade &&
+      airflow users create -r Admin -u admin -p admin -e admin@example.com -f admin -l user &&
+      airflow webserver
+      "
+
+  scheduler:
+    image: apache/airflow:2.5.1
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    volumes:
+      - /c/Users/ajayn/Documents/docker-dbt-airflow/dags:/opt/airflow/dags
+      - /c/Users/ajayn/Documents/docker-dbt-airflow/logs:/opt/airflow/logs
+      - /c/Users/ajayn/Documents/docker-dbt-airflow/plugins:/opt/airflow/plugins
+    depends_on:
+      - postgres
+    command: >
+      bash -c "
+      airflow db upgrade &&
+      airflow scheduler
+      "
+
+  dbt:
+    build:
+      context: .
+      dockerfile: Dockerfile.dbt
+    volumes:
+      - /c/Users/ajayn/Documents/docker-dbt-airflow/dbt:/usr/app/dbt
+    working_dir: /usr/app/dbt
+    entrypoint: ["tail", "-f", "/dev/null"]
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
